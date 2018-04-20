@@ -1,0 +1,186 @@
+<pre>
+  BIP: ?
+  Layer: Peer Services
+  Title: Dandelion - Privacy Enhancing Routing
+  Author: Brad Denby <bdenby@cmu.edu>
+          Giulia Fanti <gfanti@andrew.cmu.edu>
+          Andrew Miller <soc1024@illinois.edu>
+          Surya Bakshi <sbakshi3@illinois.edu>
+          Shaileshh Bojja Venkatakrishnan <bjjvnkt2@illinois.edu>
+          Pramod Viswanath <pramodv@illinois.edu>
+  Comments-URI: https://github.com/mablem8/bips/wiki/Comments:BIP-Dandelion
+  Status: Draft
+  Type: Standards Track
+  Created: 2017-06-09
+  License: Creative Commons CC0 1.0 Universal
+</pre>
+
+==Abstract==
+
+Bitcoin's transaction spreading protocol is vulnerable to deanonymization
+attacks. Dandelion is a transaction routing mechanism that provides formal
+anonymity guarantees against these attacks. When a node generates a transaction
+without Dandelion, it transmits that transaction to its peers with independent,
+exponential delays. This approach, known as diffusion in academia, allows
+network adversaries to link transactions to IP addresses.
+
+Dandelion prevents this class of attacks by sending transactions over a randomly
+selected path before diffusion. Transactions travel along this path during the
+"stem phase" and are then diffused during the "fluff phase" (hence Dandelion).
+We have shown that this routing protocol provides near-optimal anonymity
+guarantees among schemes that do not introduce additional encryption mechanisms.
+
+==Motivation==
+
+Transaction diffusion in Bitcoin is vulnerable to deanonymization attacks.
+Because transactions are sent to peers with independent, exponential delays,
+messages spread through the network in a statistically symmetric manner. This
+pattern allows colluding spy nodes to infer the transaction source. Breaking
+this symmetry prevents the attack. However, we have shown that an adversary with
+knowledge of the network topology can launch a much more effective "fingerprint"
+attack if the symmetry breaking is not done properly.
+
+Conisder a botnet-style adversary with access to the P2P graph. Note that such
+an adversary is exceedingly common - for example, an Internet service provider
+matches this adversary profile. We have shown that such an adversary can achieve
+total deanonymization of the entire network after observing less than 10
+transactions per node.
+
+[[Image:bip-dandelion/figure-1.png|Figure 1]]
+
+During a fingerprinting attack, a botnet-style adversary with knowledge of the
+graph structure first simulates transaction propogation. This offline step lets
+the adversary generate fingerprints for each network node. During the online
+attack, the adversary collects transactions at its spy nodes and matches these
+observations to the simulated fingerprints. Our simulations have shown that this
+attack results in devastating, network-wide deanonymization.
+
+[[Image:bip-dandelion/figure-2.png|Figure 2]]
+
+Per-inbound-edge Dandelion routing breaks this attack by blocking an adversary's
+ability to construct useful fingerprints. Fingerprints arise when routing
+decisions are made independently per transaction at each node. In general, two
+transactions from the same node take different paths through the network.
+Crucially, this results in multiple, unique data points that are aggregated to
+match with a fingerprint.
+
+Dandelion ensures that two transactions from the same node take the same network
+path, limiting adversaries to the far-left of the graph in Figure 1. In other
+words, adversary knowledge is limited to the case of one observed message rather
+than a rich profile of multiple transaction paths. Dandelion also breaks the
+symmetry of diffusion, making the source of the transaction difficult to infer.
+
+Dandelion is a practical, lightweight privacy solution that provides Bitcoin
+users formal anonymity guarantees. While other privacy solutions aim to protect
+individual users, Dandelion protects anonymity by limiting the capability of
+adversaries to deanonymize the entire network.
+
+==Specification==
+
+Dandelion can be specified with a handful of features: Dandelion transaction
+support, Dandelion routing data and logic, periodic Dandelion route shuffling,
+memory pool logic, the fluff mechanism, transaction embargos, and Dandelion
+transaction logic.
+
+The full specification alongside a reference implementation is outlined in the
+following PDF document: (link to be added later)
+
+Specification details are summarized below.
+
+===Dandelion transaction support===
+
+During the stem phase, transactions are "Dandelion transactions." When a
+Dandelion transaction enters fluff phase, it becomes a typical Bitcoin
+transaction. Dandelion transactions and typical transactions differ only in
+their <code>NetMsgType</code>.
+
+===Dandelion routing data and logic===
+
+Dandelion routing during the stem phase requires notions of inbound peers,
+outbound peers, Dandelion destinations, and Dandelion routes. Inbound peers
+consist of all currently connected peers that initiated the peer connection.
+Outbound peers consist of all currently connected peers that were connected to
+by this node. Dandelion destinations are subset of outbound peers. The number of
+Dandelion destinations is limited by the <code>DANDELION_MAX_DESTINATIONS</code>
+parameter. Dandelion routes are a map of inbound peers to Dandelion
+destinations. Every inbound peer is mapped to a Dandelion destination.
+
+===Periodic Dandelion route shuffling===
+
+The map of Dandelion routes is cleared and reconstructed every ten minutes on
+average.
+
+===Memory pool logic===
+
+Dandelion transactions are segregated from typical transactions. The
+<code>mempool</code> remains unchanged. Another instance of the
+<code>CTxMemPool</code> class, called the <code>stempool</code>, is used for
+Dandelion transactions. Information flows from <code>mempool</code> to
+<code>stempool</code> in order to ensure proper transaction propogation.
+Information does not flow from <code>stempool</code> to <code>mempool</code>,
+except when a Dandelion transaction fluffs into a typical transaction.
+
+===The fluff mechanism===
+
+When relaying a Dandelion transaction along a Dandelion route, there is a 10%
+chance that the Dandelion transaction becomes a typical Bitcoin transaction and
+is therefore relayed via diffusion.
+
+===Transaction embargoes===
+
+During the stem phase, transactions are relayed along a single path. If any node
+in this path were to receive the Dandelion transaction and go offline, then the
+transaction would cease to propogate. To increase robustness, every node that
+forwards a Dandelion transaction initializes a timer at the time of reception.
+If the Dandelion transaction does not appear in the memory pool by the time the
+timer expires, then the transaction enters fluff phase and is forwarded via
+diffusion.
+
+===Dandelion transaction logic===
+
+The following cases define a node's behavior when receiving network packets
+referencing Dandelion transactions.
+* Receive INV for Dandelion TX: If the peer is inbound and the Dandelion
+  transaction has not been received from this peer, then reply with GETDATA.
+* Receive GETDATA for Dandelion TX: If the peer is not inbound and the
+  Dandelion transaction has been advertised to this peer, then reply with the
+  Dandelion transaction.
+* Receive Dandelion TX: If the peer is inbound, then relay the Dandelion TX to
+  the appropriate Dandelion destination.
+
+==Implementation==
+
+A reference implementation is available at the following URL:
+https://github.com/mablem8/bitcoin/tree/dandelion-feature-commits
+
+==Compatibility==
+
+Dandelion does not conflict with existing versions of Bitcoin. A Bitcoin node
+that supports Dandelion appears no differently to Bitcoin nodes running older
+software versions. Obviously, older nodes are not capable of Dandelion routing.
+If a Bitcoin node supporting Dandelion has no peers that also support Dandelion,
+then its behavior naturally decays to that of a Bitcoin node without Dandelion
+support due to the Dandelion transaction embargoes.
+
+==Acknowledgements==
+
+We would like to thank the Bitcoin Core developers and Gregory Maxwell in
+particular for their insightful comments, which helped to inform this
+implementation and some of the follow-up work we conducted.
+
+==References==
+
+# An Analysis of Anonymity in Bitcoin Using P2P Network Traffic http://fc14.ifca.ai/papers/fc14_submission_71.pdf
+# Deanonymisation of clients in Bitcoin P2P network https://arxiv.org/abs/1405.7418
+# Discovering Bitcoin’s Public Topology and Influential Nodes https://cs.umd.edu/projects/coinscope/coinscope.pdf
+# (Sigmetrics 2017) Dandelion: Redesigning the Bitcoin Network for Anonymity https://arxiv.org/abs/1701.04439
+# Dandelion++: TBA
+
+==Copyright==
+
+To the extent possible under law, the author(s) have dedicated all copyright and
+related and neighboring rights to this work to the public domain worldwide. This
+work is distributed without any warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication with this
+work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
