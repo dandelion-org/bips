@@ -83,7 +83,8 @@ memory pool logic, the fluff mechanism, transaction embargos, and Dandelion
 transaction logic.
 
 The full specification alongside a reference implementation is outlined in the
-following PDF document: (link to be added later)
+following PDF document:
+https://github.com/mablem8/bips/blob/master/bip-dandelion/dandelion-reference-documentation.pdf
 
 Specification details are summarized below.
 
