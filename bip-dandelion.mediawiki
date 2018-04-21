@@ -141,12 +141,12 @@ diffusion.
 The following cases define a node's behavior when receiving network packets
 referencing Dandelion transactions.
 * Receive INV for Dandelion TX: If the peer is inbound and the Dandelion
-  transaction has not been received from this peer, then reply with GETDATA.
+transaction has not been received from this peer, then reply with GETDATA.
 * Receive GETDATA for Dandelion TX: If the peer is not inbound and the
-  Dandelion transaction has been advertised to this peer, then reply with the
-  Dandelion transaction.
+Dandelion transaction has been advertised to this peer, then reply with the
+Dandelion transaction.
 * Receive Dandelion TX: If the peer is inbound, then relay the Dandelion TX to
-  the appropriate Dandelion destination.
+the appropriate Dandelion destination.
 
 ==Implementation==
 
@@ -183,4 +183,4 @@ related and neighboring rights to this work to the public domain worldwide. This
 work is distributed without any warranty.
 
 You should have received a copy of the CC0 Public Domain Dedication with this
-work. If not, see <https://creativecommons.org/publicdomain/zero/1.0/>.
+work. If not, see https://creativecommons.org/publicdomain/zero/1.0/ .
