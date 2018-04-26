@@ -40,46 +40,104 @@ this symmetry prevents the attack. However, we have shown that an adversary with
 knowledge of the network topology can launch a much more effective "fingerprint"
 attack if the symmetry breaking is not done properly.
 
-Conisder a botnet-style adversary with access to the P2P graph. Note that such
+Consider a botnet-style adversary with access to the P2P graph. Note that such
 an adversary is exceedingly common - for example, an Internet service provider
 matches this adversary profile. We have shown that such an adversary can achieve
-total deanonymization of the entire network after observing less than 10
+total deanonymization of the entire network after observing less than ten
 transactions per node.
-
-[[Image:bip-dandelion/figure-1.png|Figure 1]]
-
-During a fingerprinting attack, a botnet-style adversary with knowledge of the
-graph structure first simulates transaction propogation. This offline step lets
-the adversary generate fingerprints for each network node. During the online
-attack, the adversary collects transactions at its spy nodes and matches these
-observations to the simulated fingerprints. Our simulations have shown that this
-attack results in devastating, network-wide deanonymization.
-
-[[Image:bip-dandelion/figure-2.png|Figure 2]]
-
-Per-inbound-edge Dandelion routing breaks this attack by blocking an adversary's
-ability to construct useful fingerprints. Fingerprints arise when routing
-decisions are made independently per transaction at each node. In general, two
-transactions from the same node take different paths through the network.
-Crucially, this results in multiple, unique data points that are aggregated to
-match with a fingerprint.
-
-Dandelion ensures that two transactions from the same node take the same network
-path, limiting adversaries to the far-left of the graph in Figure 1. In other
-words, adversary knowledge is limited to the case of one observed message rather
-than a rich profile of multiple transaction paths. Dandelion also breaks the
-symmetry of diffusion, making the source of the transaction difficult to infer.
 
 Dandelion is a practical, lightweight privacy solution that provides Bitcoin
 users formal anonymity guarantees. While other privacy solutions aim to protect
 individual users, Dandelion protects anonymity by limiting the capability of
 adversaries to deanonymize the entire network.
 
+==How Dandelion Works==
+
+Dandelion enhances user privacy by sending transactions through an anonymity
+phase before diffusing them throughout the network. At a high level, Dandelion
+enhances privacy by (i) breaking the symmetry of diffusion and (ii) mixing
+transactions by forwarding messages from different sources along the same path.
+
+Dandelion routing can be conceptualized in three phases. First, a privacy graph
+is constructed. In practice, this privacy graph is constructed in a fully
+decentralized manner and is a subgraph of the existing Bitcoin P2P network.
+Next, transactions are forwarded along this privacy graph during the "stem
+phase." Finally, messages are broadcast to the network during the "fluff phase"
+using the typical method of diffusion.
+
+[[File:bip-dandelion/1-dandelion.png|framed|center|alt=An illustration of Dandelion routing|Figure 1]]
+
+In order to select the privacy graph in a decentralized manner, each node
+selects a subset of its outbound peers to be Dandelion destinations. Dandelion
+transactions (transactions in their stem phase) that arrive at this node via
+inbound connections are forwarded to these Dandelion destinations.
+
+In an ideal setting, we have found that a Hamiltonian circuit provides
+near-optimal privacy guarantees. However, constructing a Hamiltonian circuit
+through the Bitcoin P2P network in a decentralized, trustless manner is not
+feasible. Thus, we recommend that each node select two Dandelion destinations
+uniformly at random without replacement from its list of outbound peers. Our
+tests have shown that this method provides comparable privacy with increased
+robustness.
+
+During stem phase routing, there is a question of how to route messages in order
+to protect privacy. For example, if two Dandelion transactions arrive at a node
+from different inbound peers, to which Dandelion destination(s) should these
+transactions be sent? We have found that some choices are much better than
+others.
+
+Consider the case in which each Dandelion transaction is forwarded to a
+Dandelion destination selected uniformly at random. This approach results in a
+fingerprint attack allowing network-level botnet adversaries to achieve total
+deanonymization of the P2P network after observing less than ten transactions
+per node.
+
+[[File:bip-dandelion/2-attack.png|framed|center|alt=An illustration of a fingerprint attack|Figure 2]]
+
+During a fingerprint attack, a botnet-style adversary with knowledge of the
+graph structure first simulates transaction propagation. This offline step lets
+the adversary generate fingerprints for each network node. During the online
+attack, the adversary collects transactions at its spy nodes and matches these
+observations to the simulated fingerprints. Our simulations have shown that this
+attack results in devastating, network-wide deanonymization.
+
+[[File:bip-dandelion/3-attack-plot.png|framed|center|alt=A plot illustrating total deanonymization|Figure 3]]
+
+To avoid this issue, we suggest "per-inbound-edge" routing. Each inbound peer is
+assigned a particular Dandelion destination. Each Dandelion transaction that
+arrives via this peer is forwarded to the same Dandelion destination. 
+Per-inbound-edge routing breaks the described attack by blocking an adversary's
+ability to construct useful fingerprints. Fingerprints arise when routing
+decisions are made independently per transaction at each node. In this case, two
+transactions from the same node generally take different paths through the
+network. Crucially, this results in multiple, unique data points that are
+aggregated to match with a fingerprint.
+
+[[File:bip-dandelion/4-per-inbound-edge.png|framed|center|alt=An illustration of per-inbound-edge routing|Figure 4]]
+
+Dandelion ensures that two transactions from the same node take the same network
+path, limiting adversaries to the far-left of the graph in Figure 3. In other
+words, adversary knowledge is limited to the case of one observed message rather
+than a rich profile of multiple transaction paths. Dandelion also breaks the
+symmetry of diffusion, making the source of the transaction difficult to infer.
+
+[[File:bip-dandelion/5-dandelion-plot.png|framed|center|alt=A plot illustrating limited deanonymization|Figure 5]]
+
+After a transaction has traveled along a Dandelion stem for a random number of
+hops, it transitions into the fluff phase of routing. The transaction is shared
+with the network through the existing process of diffusion. In practice, this
+fluff mechanism is enforced by a weighted coin flip at each node. If the random
+value is below some threshold, the Dandelion transaction is transformed into a
+typical transaction. In our testing, we have chosen a probability of ten percent
+that a given Dandelion transaction enters fluff phase when leaving a given node.
+This value strikes a good balance between stem path length and transaction
+spreading latency.
+
 ==Specification==
 
 Dandelion can be specified with a handful of features: Dandelion transaction
 support, Dandelion routing data and logic, periodic Dandelion route shuffling,
-memory pool logic, the fluff mechanism, transaction embargos, and Dandelion
+memory pool logic, the fluff mechanism, transaction embargoes, and Dandelion
 transaction logic.
 
 The full specification alongside a reference implementation is outlined in the
@@ -103,13 +161,17 @@ consist of all currently connected peers that initiated the peer connection.
 Outbound peers consist of all currently connected peers that were connected to
 by this node. Dandelion destinations are subset of outbound peers. The number of
 Dandelion destinations is limited by the <code>DANDELION_MAX_DESTINATIONS</code>
-parameter. Dandelion routes are a map of inbound peers to Dandelion
-destinations. Every inbound peer is mapped to a Dandelion destination.
+parameter. In the reference implementation, this parameter is set to two. Our
+tests have shown that this value provides both privacy and robustness (see the
+reference paper for more details on the parameter tradeoffs). Dandelion routes
+are a map of inbound peers to Dandelion destinations. Every inbound peer is
+mapped to a Dandelion destination.
 
 ===Periodic Dandelion route shuffling===
 
 The map of Dandelion routes is cleared and reconstructed every ten minutes on
-average.
+average. We have chosen the value of ten minutes heuristically in order to make
+privacy graph learning difficult for adversaries.
 
 ===Memory pool logic===
 
@@ -117,7 +179,7 @@ Dandelion transactions are segregated from typical transactions. The
 <code>mempool</code> remains unchanged. Another instance of the
 <code>CTxMemPool</code> class, called the <code>stempool</code>, is used for
 Dandelion transactions. Information flows from <code>mempool</code> to
-<code>stempool</code> in order to ensure proper transaction propogation.
+<code>stempool</code> in order to ensure proper transaction propagation.
 Information does not flow from <code>stempool</code> to <code>mempool</code>,
 except when a Dandelion transaction fluffs into a typical transaction.
 
@@ -125,13 +187,14 @@ except when a Dandelion transaction fluffs into a typical transaction.
 
 When relaying a Dandelion transaction along a Dandelion route, there is a 10%
 chance that the Dandelion transaction becomes a typical Bitcoin transaction and
-is therefore relayed via diffusion.
+is therefore relayed via diffusion. In our testing, this value strikes a good
+balance between stem path length and transaction spreading latency.
 
 ===Transaction embargoes===
 
 During the stem phase, transactions are relayed along a single path. If any node
 in this path were to receive the Dandelion transaction and go offline, then the
-transaction would cease to propogate. To increase robustness, every node that
+transaction would cease to propagate. To increase robustness, every node that
 forwards a Dandelion transaction initializes a timer at the time of reception.
 If the Dandelion transaction does not appear in the memory pool by the time the
 timer expires, then the transaction enters fluff phase and is forwarded via
@@ -141,13 +204,9 @@ diffusion.
 
 The following cases define a node's behavior when receiving network packets
 referencing Dandelion transactions.
-* Receive INV for Dandelion TX: If the peer is inbound and the Dandelion
-transaction has not been received from this peer, then reply with GETDATA.
-* Receive GETDATA for Dandelion TX: If the peer is not inbound and the
-Dandelion transaction has been advertised to this peer, then reply with the
-Dandelion transaction.
-* Receive Dandelion TX: If the peer is inbound, then relay the Dandelion TX to
-the appropriate Dandelion destination.
+* Receive INV for Dandelion TX: If the peer is inbound and the Dandelion transaction has not been received from this peer, then reply with GETDATA.
+* Receive GETDATA for Dandelion TX: If the peer is not inbound and the Dandelion transaction has been advertised to this peer, then reply with the Dandelion transaction.
+* Receive Dandelion TX: If the peer is inbound, then relay the Dandelion TX to the appropriate Dandelion destination.
 
 ==Implementation==
 
@@ -167,7 +226,9 @@ support due to the Dandelion transaction embargoes.
 
 We would like to thank the Bitcoin Core developers and Gregory Maxwell in
 particular for their insightful comments, which helped to inform this
-implementation and some of the follow-up work we conducted.
+implementation and some of the follow-up work we conducted. We would also like
+to thank the Mimblewimble development community for coining the term "stempool,"
+which we happily adopted for this implementation.
 
 ==References==
 
