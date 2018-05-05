@@ -113,15 +113,13 @@ transactions from the same node generally take different paths through the
 network. Crucially, this results in multiple, unique data points that are
 aggregated to match with a fingerprint.
 
-[[File:bip-dandelion/4-per-inbound-edge.png|framed|center|alt=An illustration of per-inbound-edge routing|Figure 4]]
-
 Dandelion ensures that two transactions from the same node take the same network
 path, limiting adversaries to the far-left of the graph in Figure 3. In other
 words, adversary knowledge is limited to the case of one observed message rather
 than a rich profile of multiple transaction paths. Dandelion also breaks the
 symmetry of diffusion, making the source of the transaction difficult to infer.
 
-[[File:bip-dandelion/5-dandelion-plot.png|framed|center|alt=A plot illustrating limited deanonymization|Figure 5]]
+[[File:bip-dandelion/4-dandelion-plot.png|framed|center|alt=A plot illustrating limited deanonymization|Figure 4]]
 
 After a transaction has traveled along a Dandelion stem for a random number of
 hops, it transitions into the fluff phase of routing. The transaction is shared
