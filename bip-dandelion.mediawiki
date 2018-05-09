@@ -3,10 +3,10 @@
   Layer: Peer Services
   Title: Dandelion - Privacy Enhancing Routing
   Author: Brad Denby <bdenby@cmu.edu>
-          Giulia Fanti <gfanti@andrew.cmu.edu>
           Andrew Miller <soc1024@illinois.edu>
+          Giulia Fanti <gfanti@andrew.cmu.edu>
           Surya Bakshi <sbakshi3@illinois.edu>
-          Shaileshh Bojja Venkatakrishnan <bjjvnkt2@illinois.edu>
+          Shaileshh Bojja Venkatakrishnan <shaileshh.bv@gmail.com>
           Pramod Viswanath <pramodv@illinois.edu>
   Comments-URI: https://github.com/mablem8/bips/wiki/Comments:BIP-Dandelion
   Status: Draft
@@ -211,14 +211,18 @@ referencing Dandelion transactions.
 A reference implementation is available at the following URL:
 https://github.com/mablem8/bitcoin/tree/dandelion-feature-commits
 
+All features have been compressed into a single commit at the following URL:
+https://github.com/mablem8/bitcoin/tree/dandelion
+
 ==Compatibility==
 
 Dandelion does not conflict with existing versions of Bitcoin. A Bitcoin node
 that supports Dandelion appears no differently to Bitcoin nodes running older
-software versions. Obviously, older nodes are not capable of Dandelion routing.
-If a Bitcoin node supporting Dandelion has no peers that also support Dandelion,
-then its behavior naturally decays to that of a Bitcoin node without Dandelion
-support due to the Dandelion transaction embargoes.
+software versions. Bitcoin nodes that support Dandelion can identify feature
+support through a probe message. Obviously, older nodes are not capable of
+Dandelion routing. If a Bitcoin node supporting Dandelion has no peers that also
+support Dandelion, then its behavior naturally decays to that of a Bitcoin node
+without Dandelion support due to the Dandelion transaction embargoes.
 
 ==Acknowledgements==
 
@@ -234,7 +238,6 @@ which we happily adopted for this implementation.
 # Deanonymisation of clients in Bitcoin P2P network https://arxiv.org/abs/1405.7418
 # Discovering Bitcoin’s Public Topology and Influential Nodes https://cs.umd.edu/projects/coinscope/coinscope.pdf
 # (Sigmetrics 2017) Dandelion: Redesigning the Bitcoin Network for Anonymity https://arxiv.org/abs/1701.04439
-# Dandelion++: TBA
 
 ==Copyright==
 
