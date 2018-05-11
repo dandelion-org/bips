@@ -24,11 +24,12 @@ without Dandelion, it transmits that transaction to its peers with independent,
 exponential delays. This approach, known as diffusion in academia, allows
 network adversaries to link transactions to IP addresses.
 
-Dandelion prevents this class of attacks by sending transactions over a randomly
-selected path before diffusion. Transactions travel along this path during the
-"stem phase" and are then diffused during the "fluff phase" (hence Dandelion).
-We have shown that this routing protocol provides near-optimal anonymity
-guarantees among schemes that do not introduce additional encryption mechanisms.
+Dandelion mitigates this class of attacks by sending transactions over a
+randomly selected path before diffusion. Transactions travel along this path
+during the "stem phase" and are then diffused during the "fluff phase" (hence
+Dandelion). We have shown that this routing protocol provides near-optimal
+anonymity guarantees among schemes that do not introduce additional encryption
+mechanisms.
 
 ==Motivation==
 
@@ -40,16 +41,16 @@ this symmetry prevents the attack. However, we have shown that an adversary with
 knowledge of the network topology can launch a much more effective "fingerprint"
 attack if the symmetry breaking is not done properly.
 
-Consider a botnet-style adversary with access to the P2P graph. Note that such
-an adversary is exceedingly common - for example, an Internet service provider
-matches this adversary profile. We have shown that such an adversary can achieve
-total deanonymization of the entire network after observing less than ten
-transactions per node.
+Consider a botnet-style adversary with access to the P2P graph. Botnets of size
+comparable to the Bitcoin P2P network are common and cheap, and these
+adversaries can learn the network structure with probe messages. We have shown
+that such an adversary can achieve total deanonymization of the entire network
+after observing less than ten transactions per node.
 
-Dandelion is a practical, lightweight privacy solution that provides Bitcoin
-users formal anonymity guarantees. While other privacy solutions aim to protect
-individual users, Dandelion protects anonymity by limiting the capability of
-adversaries to deanonymize the entire network.
+Dandelion is a practical, lightweight privacy solution that provides the Bitcoin
+network formal anonymity guarantees. While other privacy solutions aim to
+protect individual users, Dandelion protects anonymity by limiting the
+capability of adversaries to deanonymize the entire network.
 
 ==How Dandelion Works==
 
