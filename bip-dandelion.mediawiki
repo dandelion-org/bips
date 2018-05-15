@@ -132,6 +132,25 @@ that a given Dandelion transaction enters fluff phase when leaving a given node.
 This value strikes a good balance between stem path length and transaction
 spreading latency.
 
+Note that Dandelion's expected precision guarantees are a population-level
+metric, whereas the expected recall guarantees can be interpreted as an
+individual-level metric. Expected recall is equivalent to the probability that
+an adversary associates a single transaction with a given source. These
+guarantees are probabilistic. They do not address scenarios in which a node has
+been eclipsed by other nodes, or when a node is specifically targeted by an
+ISP-like adversary. Individuals who are concerned about targeted deanonymization
+should still use Tor.
+
+At a high level, Dandelion is like an "anonymity inoculation" for the public at
+large - including users who are not aware of Bitcoin's privacy issues. Higher
+adoption leads to greater benefits, even for users who do not use Tor. Early
+adopters of Dandelion still receive privacy benefits. In the worst case when no
+neighbors support Dandelion, transactions make at least one hop before
+diffusing. Note that any solution based only on routing cannot be perfectly
+anonymous due to the fundamental lower bounds on precision and recall shown in
+the original Dandelion paper. Dandelion provides near-optimal anonymity
+guarantees among such solutions.
+
 ==Specification==
 
 Dandelion can be specified with a handful of features: Dandelion transaction
