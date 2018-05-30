@@ -67,6 +67,7 @@ phase." Finally, messages are broadcast to the network during the "fluff phase"
 using the typical method of diffusion.
 
 [[File:bip-dandelion/1-dandelion.png|framed|center|alt=An illustration of Dandelion routing|Figure 1]]
+Figure 1
 
 In order to select the privacy graph in a decentralized manner, each node
 selects a subset of its outbound peers to be Dandelion destinations. Dandelion
@@ -94,6 +95,7 @@ deanonymization of the P2P network after observing less than ten transactions
 per node.
 
 [[File:bip-dandelion/2-attack.png|framed|center|alt=An illustration of a fingerprint attack|Figure 2]]
+Figure 2
 
 During a fingerprint attack, a botnet-style adversary with knowledge of the
 graph structure first simulates transaction propagation. This offline step lets
@@ -103,6 +105,7 @@ observations to the simulated fingerprints. Our simulations have shown that this
 attack results in devastating, network-wide deanonymization.
 
 [[File:bip-dandelion/3-attack-plot.png|framed|center|alt=A plot illustrating total deanonymization|Figure 3]]
+Figure 3
 
 To avoid this issue, we suggest "per-inbound-edge" routing. Each inbound peer is
 assigned a particular Dandelion destination. Each Dandelion transaction that
@@ -121,6 +124,7 @@ than a rich profile of multiple transaction paths. Dandelion also breaks the
 symmetry of diffusion, making the source of the transaction difficult to infer.
 
 [[File:bip-dandelion/4-dandelion-plot.png|framed|center|alt=A plot illustrating limited deanonymization|Figure 4]]
+Figure 4
 
 After a transaction has traveled along a Dandelion stem for a random number of
 hops, it transitions into the fluff phase of routing. The transaction is shared
@@ -258,6 +262,7 @@ which we happily adopted for this implementation.
 # Deanonymisation of clients in Bitcoin P2P network https://arxiv.org/abs/1405.7418
 # Discovering Bitcoin’s Public Topology and Influential Nodes https://cs.umd.edu/projects/coinscope/coinscope.pdf
 # (Sigmetrics 2017) Dandelion: Redesigning the Bitcoin Network for Anonymity https://arxiv.org/abs/1701.04439
+# (Sigmetrics 2018) Dandelion++: Lightweight Cryptocurrency Networking with Formal Anonymity Guarantees https://arxiv.org/pdf/1805.11060.pdf
 
 ==Copyright==
 
