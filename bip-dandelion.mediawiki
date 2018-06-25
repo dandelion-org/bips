@@ -160,13 +160,7 @@ guarantees among such solutions.
 Dandelion can be specified with a handful of features: Dandelion transaction
 support, Dandelion routing data and logic, periodic Dandelion route shuffling,
 memory pool logic, the fluff mechanism, transaction embargoes, and Dandelion
-transaction logic.
-
-The full specification alongside a reference implementation is outlined in the
-following PDF document:
-https://github.com/mablem8/bips/blob/master/bip-dandelion/dandelion-reference-documentation.pdf
-
-Specification details are summarized below.
+transaction logic. Specification details are summarized below.
 
 ===Dandelion transaction support===
 
@@ -175,25 +169,57 @@ Dandelion transaction enters fluff phase, it becomes a typical Bitcoin
 transaction. Dandelion transactions and typical transactions differ only in
 their <code>NetMsgType</code>.
 
+Dandelion (stem phase) transactions MUST be differentiable from typical Bitcoin
+transactions.
+
 ===Dandelion routing data and logic===
 
 Dandelion routing during the stem phase requires notions of inbound peers,
 outbound peers, Dandelion destinations, and Dandelion routes. Inbound peers
 consist of all currently connected peers that initiated the peer connection.
 Outbound peers consist of all currently connected peers that were connected to
-by this node. Dandelion destinations are subset of outbound peers. The number of
-Dandelion destinations is limited by the <code>DANDELION_MAX_DESTINATIONS</code>
-parameter. In the reference implementation, this parameter is set to two. Our
-tests have shown that this value provides both privacy and robustness (see the
-reference paper for more details on the parameter tradeoffs). Dandelion routes
-are a map of inbound peers to Dandelion destinations. Every inbound peer is
-mapped to a Dandelion destination.
+by this node. Dandelion destinations are a subset of outbound peers. The number
+of Dandelion destinations is limited by the
+<code>DANDELION_MAX_DESTINATIONS</code> parameter. In the reference
+implementation, this parameter is set to two. Our tests have shown that this
+value provides both privacy and robustness (see the reference paper for more
+details on the parameter tradeoffs). Dandelion routes are a map of inbound peers
+to Dandelion destinations. Every inbound peer is mapped to a Dandelion
+destination.
+
+Note that a Dandelion node may choose a different
+<code>DANDELION_MAX_DESTINATIONS</code> parameter without splitting from the
+privacy graph. When mapping inbound connections to outbound connections for
+Dandelion routes, we implement the following routing logic. First, select a set
+of Dandelion destinations from the set of outbound peers. This set of Dandelion
+destinations is of size less than or equal to
+<code>DANDELION_MAX_DESTINATIONS</code>. For each inbound connection, first
+identify the subset of Dandelion destinations with the least number of routes.
+For example, some subset of Dandelion destinations may be affiliated with zero
+routes while all other Dandelion destinations are affiliated with one or more
+routes. From this subset, select one Dandelion destination uniformly at random.
+Establish a Dandelion route from the inbound connection to this Dandelion
+destination.
+
+For a given Dandelion routing epoch, two distinct Dandelion destinations SHOULD
+be selected uniformly at random from the set of outbound connections. All
+Dandelion transactions that arrive via a given inbound connection MUST be
+transmitted to the same Dandelion destination. When choosing a Dandelion
+destination for a given inbound connection, the destination MUST be selected
+uniformly at random from the set of Dandelion destinations with the least number
+of inbound connections mapped to them.
 
 ===Periodic Dandelion route shuffling===
 
 The map of Dandelion routes is cleared and reconstructed every ten minutes on
 average. We have chosen the value of ten minutes heuristically in order to make
-privacy graph learning difficult for adversaries.
+privacy graph learning difficult for adversaries. Note that a Dandelion node may
+choose a different average shuffle time without splitting from the privacy
+graph.
+
+Dandelion routes MUST be cleared and reconstructed at random intervals.
+Dandelion routes SHOULD be cleared and reconstructed every ten minutes on
+average.
 
 ===Memory pool logic===
 
@@ -205,12 +231,27 @@ Dandelion transactions. Information flows from <code>mempool</code> to
 Information does not flow from <code>stempool</code> to <code>mempool</code>,
 except when a Dandelion transaction fluffs into a typical transaction.
 
+When a Dandelion transaction arrives, the transaction MUST be added to the
+stempool and MUST NOT be added to the mempool. When a typical Bitcoin
+transaction arrives, the transaction MUST be added to the mempool and MUST be
+added to the stempool. When a Dandelion transaction fluffs, the transaction MUST
+be added to the mempool.
+
 ===The fluff mechanism===
 
 When relaying a Dandelion transaction along a Dandelion route, there is a 10%
 chance that the Dandelion transaction becomes a typical Bitcoin transaction and
 is therefore relayed via diffusion. In our testing, this value strikes a good
-balance between stem path length and transaction spreading latency.
+balance between stem path length and transaction spreading latency. Note that a
+Dandelion node may choose a different chance of fluffing without splitting from
+the privacy graph.
+
+When a node prepares to transmit a Dandelion transaction, the node MUST flip a
+biased coin. If the outcome is "Dandelion transaction," then the node MUST
+transmit the transaction to the appropriate Dandelion destination. Otherwise,
+the node MUST convert the Dandelion transaction into a typical Bitcoin
+transaction. A Dandelion transaction SHOULD fluff into a typical Bitcoin
+transaction with a 10% probability.
 
 ===Transaction embargoes===
 
@@ -221,6 +262,12 @@ forwards a Dandelion transaction initializes a timer at the time of reception.
 If the Dandelion transaction does not appear in the memory pool by the time the
 timer expires, then the transaction enters fluff phase and is forwarded via
 diffusion.
+
+When a Dandelion transaction arrives, the node MUST set an embargo timer for a
+random time in the future. If the Dandelion transaction arrives as a typical
+Bitcoin transaction, the node MUST cancel the timer. If the timer expires before
+the Dandelion transaction is observed as a typical Bitcoin transaction, then the
+node MUST fluff the Dandelion transaction.
 
 ===Dandelion transaction logic===
 
